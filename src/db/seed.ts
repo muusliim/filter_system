@@ -4,7 +4,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const getRandomPrice = () => {
-	const PRICES = [9.99, 19.99, 29.99, 39.99, 49.99];
+	const PRICES = [9.99, 19.99, 29.99, 39.99, 59.99];
 	return PRICES[Math.floor(Math.random() * PRICES.length)];
 };
 
@@ -26,7 +26,7 @@ const seed = async () => {
 					color,
 					name: `${
 						color.slice(0, 1).toUpperCase() + color.slice(1)
-					} shirt ${i}`,
+					} shirt ${i+1}`,
 					size,
 					price: getRandomPrice(),
 				});

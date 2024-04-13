@@ -39,6 +39,35 @@ const COLOR_FILTERS = {
 		{ value: "purple", label: "Фиолетовый" },
 	],
 } as const;
+const SIZE_FILTERS = {
+	id: "size",
+	name: "Size",
+	options: [
+		{ value: "S", label: "S" },
+		{ value: "M", label: "M" },
+		{ value: "L", label: "L" },
+	],
+} as const;
+
+const PRICE_FILTERS = {
+	id: "price",
+	name: "Price",
+	options: [
+		{
+			value: [0, 100],
+			label: "Любая цена",
+		},
+		{
+			value: [0, 20],
+			label: "до 20$",
+		},
+		{
+			value: [0, 40],
+			label: "до 40$",
+		},
+		//custom option
+	],
+};
 
 const SUBCATEGORY_OPTIONS = [
 	{ name: "Футболки", selected: true, href: "#" },
@@ -47,14 +76,14 @@ const SUBCATEGORY_OPTIONS = [
 	{ name: "Акссесуары", selected: false, href: "#" },
 ] as const;
 
-const DEFAULT_CUSTOM_PRICE: [number, number] = [0, 100];
+const DEFAULT_CUSTOM_PRICE = [0, 100] as [number, number];
 
 export default function Home() {
 	const [filter, setFilter] = useState<ProductState>({
 		sort: "none",
 		size: ["L", "M", "S"],
 		color: ["beige", "blue", "green", "purple", "white"],
-		price: {isCustom: false, range: DEFAULT_CUSTOM_PRICE},
+		price: { isCustom: false, range: DEFAULT_CUSTOM_PRICE },
 	});
 
 	const { data: products } = useQuery({
@@ -72,6 +101,29 @@ export default function Home() {
 			return data;
 		},
 	});
+
+	const applyArrayFilter = ({
+		category,
+		value,
+	}: {
+		category: keyof Omit<typeof filter, "price" | "sort">;
+		value: string;
+	}) => {
+		const isFilterApplied = filter[category].includes(value as never);
+
+		if (isFilterApplied) {
+			setFilter((prev) => ({
+				...prev,
+				[category]: prev[category].filter((v) => v !== value),
+			}));
+		} else {
+			setFilter((prev) => ({
+				...prev,
+				[category]: [...prev[category], value],
+			}));
+		}
+		console.log(filter);
+	};
 
 	return (
 		<main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -134,11 +186,21 @@ export default function Home() {
 								<AccordionContent className="AccordionContent">
 									<ul>
 										{COLOR_FILTERS.options.map((option, optionIdx) => (
-											<li key={option.value} className="flex items-center py-1 ">
+											<li
+												key={option.value}
+												className="flex items-center py-1 "
+											>
 												<input
 													type="checkbox"
 													id={`color-${optionIdx}`}
 													className="h-4 w-4 border-gray-300 text-cyan-500 focus:ring-cyan-500 "
+													onChange={() => {
+														applyArrayFilter({
+															category: "color",
+															value: option.value,
+														});
+													}}
+													checked={filter.color.includes(option.value)}
 												/>
 												<label
 													htmlFor={`color-${optionIdx}`}
@@ -148,6 +210,110 @@ export default function Home() {
 												</label>
 											</li>
 										))}
+									</ul>
+								</AccordionContent>
+							</AccordionItem>
+							{/*size filter*/}
+							<AccordionItem value="size">
+								<AccordionTrigger className="py-3 text-sm text-gray-400 hover:text-gray-600">
+									<span className="font-medium text-gray-900">Размер</span>
+								</AccordionTrigger>
+								<AccordionContent className="AccordionContent">
+									<ul>
+										{SIZE_FILTERS.options.map((option, optionIdx) => (
+											<li
+												key={option.value}
+												className="flex items-center py-1 "
+											>
+												<input
+													type="checkbox"
+													id={`size-${optionIdx}`}
+													className="h-4 w-4 border-gray-300 text-cyan-500 focus:ring-cyan-500 "
+													onChange={() => {
+														applyArrayFilter({
+															category: "size",
+															value: option.value,
+														});
+													}}
+													checked={filter.size.includes(option.value)}
+												/>
+												<label
+													htmlFor={`size-${optionIdx}`}
+													className="ml-3 text-sm text-gray-600 "
+												>
+													{option.label}
+												</label>
+											</li>
+										))}
+									</ul>
+								</AccordionContent>
+							</AccordionItem>
+							{/* price filter */}
+							<AccordionItem value="price">
+								<AccordionTrigger className="py-3 text-sm text-gray-400 hover:text-gray-600">
+									<span className="font-medium text-gray-900">Цена</span>
+								</AccordionTrigger>
+								<AccordionContent className="AccordionContent">
+									<ul>
+										{PRICE_FILTERS.options.map((option, optionIdx) => (
+											<li
+												key={option.label}
+												className="flex items-center py-1 "
+											>
+												<input
+													type="radio"
+													id={`price-${optionIdx}`}
+													className="h-4 w-4 border-gray-300 text-cyan-500 focus:ring-cyan-500 "
+													onChange={() => {
+														setFilter((prev) => ({
+															...prev,
+															price: {
+																isCustom: false,
+																range: [option.value[0], option.value[1]],
+															},
+														}));
+													}}
+													checked={
+														!filter.price.isCustom &&
+														filter.price.range[0] === option.value[0] &&
+														filter.price.range[1] === option.value[1]
+													}
+												/>
+												<label
+													htmlFor={`price-${optionIdx}`}
+													className="ml-3 text-sm text-gray-600 "
+												>
+													{option.label}
+												</label>
+											</li>
+										))}
+										<li className="flex justify-center flex-col gap-2">
+											<div>
+												<input
+													type="radio"
+													id={`price-${PRICE_FILTERS.options.length}`}
+													className="h-4 w-4 border-gray-300 text-cyan-500 focus:ring-cyan-500 "
+													onChange={() => {
+														setFilter((prev) => ({
+															...prev,
+															price: {
+																isCustom: true,
+																range: [0, 100],
+															},
+														}));
+													}}
+													checked={
+														filter.price.isCustom
+													}
+												/>
+												<label
+													htmlFor={`price-${PRICE_FILTERS.options.length}`}
+													className="ml-3 text-sm text-gray-600 "
+												>
+													Установить цену
+												</label>
+											</div>
+										</li>
 									</ul>
 								</AccordionContent>
 							</AccordionItem>
